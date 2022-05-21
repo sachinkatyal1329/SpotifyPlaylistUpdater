@@ -9,6 +9,7 @@ const request = require('request');
 
 const axios = require('axios');
 
+
 router.get('/', async (req, res) => {
 	const access_token_data = await axios.get('http://localhost:3000/playlist/auth').catch(e => { console.log(e) })
 	const access_token = access_token_data.data
@@ -16,38 +17,37 @@ router.get('/', async (req, res) => {
 	spotifyApi.setAccessToken(access_token);
 
 
-
 	spotifyApi.getUserPlaylists(constants.USER_ID)
-		.then(function(data) {
+		.then(async function(data) {
 			// let playlists = res.json(data.body.items)
 
-			playlists = data.body.items
+			let playlists = data.body.items
 			
 			
-			const offset = 20
+			let offset = 20;
 			const numIter = Math.ceil(data.body.total / offset)
 
-			for (let i = 0; i < numIter; i++) {
-				const temp = spotifyApi.getUserPlaylists(constants.USER_ID, {offset}).then(hi => {
-					playlists.push(hi.body)
-				})
+			for (let i = 1; i < numIter; i++) {
 
-				console.log(playlists)
+				const temp = await spotifyApi.getUserPlaylists(constants.USER_ID, {offset: offset})
+
+
+				playlists.push.apply(playlists, temp.body.items)
+				playlists = playlists.map(playlist => ({name: playlist.name, id: playlist.id}))
+
+				offset += 20;
 			}
 
-			playlists = playlists.map((playlist)=>({name: playlist.name, id: playlist.id}))
+			return playlists
 
+  	}).then(temp => {
 
+  		res.json(temp)
 
-
-
-			res.json(playlists)
-  	},function(err) {
-	    	console.log('Something went wrong!', err);
-  	});
+  	}).catch((e) => {
+  		console.log(e)
+  	})
 })
-
-
 
 router.get('/auth', (req, res) => {
 	var authOptions = {

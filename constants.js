@@ -15,10 +15,8 @@ const initSpotifyApi = (access_token) => {
 	  redirectUri: 'http://www.example.com/callback'
 	});
 
-
-	spotifyApi.setAccessToken(access_token);
-
-	return spotifyApi	
+	return spotifyApi
+		
 }
 
 module.exports = {
